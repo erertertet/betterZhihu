@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         better_zhihu
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.3.1
 // @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局
 // @author       Erertertet
 // @match        https://www.zhihu.com/*
@@ -108,10 +108,11 @@
             }
 
             // 获取URL - 注意不要重复添加域名
-            const urlMeta = contentItem.querySelector('meta[itemprop="url"]');
-            if (urlMeta) {
-                const urlContent = urlMeta.content;
-                url = urlContent.startsWith('http') ? urlContent : 'https://www.zhihu.com' + urlContent;
+            const linkElement = questionDiv?.querySelector('a[href*="/question/"]');
+            if (linkElement) {
+                const href = linkElement.getAttribute('href');
+                // href 格式是 "//www.zhihu.com/question/..." 需要添加 https:
+                url = href.startsWith('http') ? href : 'https:' + href;
             }
 
             return `${title} - ${author}的回答 - 知乎\n${url}`;
