@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         better_zhihu
 // @namespace    https://github.com/erertertet/betterZhihu
-// @version      1.3.2
+// @version      1.3.3
 // @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局
 // @author       Erertertet
 // @match        https://www.zhihu.com/*
@@ -76,77 +76,29 @@
         const isAnswer = contentItem.classList.contains('AnswerItem');
         const isArticle = contentItem.classList.contains('ArticleItem');
 
-        let title = '';
-        let author = '';
-        let url = '';
+        const jsonData = JSON.parse(contentItem.getAttribute('data-zop'));
+        const jsonExtra = JSON.parse(contentItem.getAttribute('data-za-extra-module'));
 
+        const jsonDataCombined = { ...jsonData, ...jsonExtra };
+
+        console.log(jsonDataCombined);
+
+        let title = jsonDataCombined.title;
+        let author = jsonDataCombined.authorName;
+        let ids = jsonDataCombined.card.content;
+        
         if (isAnswer) {
-            // 获取问题标题
-            const questionDiv = contentItem.querySelector('[itemprop="zhihu:question"]');
-            const titleMeta = questionDiv?.querySelector('meta[itemprop="name"]');
-            title = titleMeta ? titleMeta.content : '';
 
-            // 获取作者名 - 优先从 AuthorInfo 中获取（展开状态）
-            const authorNameElement = contentItem.querySelector('.AuthorInfo-name a');
-            if (authorNameElement) {
-                author = authorNameElement.textContent.trim();
-            } else {
-                // 折叠状态：从回答内容开头提取作者名（冒号前的文本）
-                const richText = contentItem.querySelector('.RichText[itemprop="text"]');
-                if (richText && richText.textContent) {
-                    const text = richText.textContent.trim();
-                    const colonIndex = text.indexOf('：');
-                    if (colonIndex > 0 && colonIndex < 50) {
-                        // 确保冒号在合理位置（前50个字符内）
-                        author = text.substring(0, colonIndex).trim();
-                    }
-                }
-                
-                // 如果还是没找到，用备用方法
-                if (!author) {
-                    const authorMeta = contentItem.querySelector('[itemprop="author"] meta[itemprop="name"]');
-                    author = authorMeta ? authorMeta.content : '';
-                }
-            }
 
             // 获取URL - 注意不要重复添加域名
-            const linkElement = questionDiv?.querySelector('a[href*="/question/"]');
-            if (linkElement) {
-                const href = linkElement.getAttribute('href');
-                // href 格式是 "//www.zhihu.com/question/..." 需要添加 https:
-                url = href.startsWith('http') ? href : 'https:' + href;
-            }
+            let url = `https://www.zhihu.com/question/${ids.parent_token}/answer/${ids.token}`;
 
             return `${title} - ${author}的回答 - 知乎\n${url}`;
         } else if (isArticle) {
-            // 获取文章标题
-            const titleMeta = contentItem.querySelector('meta[itemprop="headline"]');
-            title = titleMeta ? titleMeta.content : '';
 
-            // 获取作者
-            const authorLink = contentItem.querySelector('.AuthorInfo-name a');
-            if (authorLink) {
-                author = authorLink.textContent.trim();
-            } else {
-                // 折叠状态：从文章内容开头提取
-                const richText = contentItem.querySelector('.RichText[itemprop="articleBody"]');
-                if (richText && richText.textContent) {
-                    const text = richText.textContent.trim();
-                    const colonIndex = text.indexOf('：');
-                    if (colonIndex > 0 && colonIndex < 50) {
-                        author = text.substring(0, colonIndex).trim();
-                    }
-                }
-            }
+            let url = `https://zhuanlan.zhihu.com/p/${ids.token}`;
 
-            // 获取URL
-            const urlMeta = contentItem.querySelector('meta[itemprop="url"]');
-            if (urlMeta) {
-                const urlContent = urlMeta.content;
-                url = urlContent.startsWith('http') ? urlContent : 'https:' + urlContent;
-            }
-
-            return `${title} - ${author} - 知乎\n${url}`;
+            return `${title} - ${author}的文章 - 知乎\n${url}`;
         }
         return null;
     }
