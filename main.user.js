@@ -388,18 +388,18 @@
 
             // 根据比例设置颜色
             if (ratio > 1) {
-                ratioElement.style.backgroundColor = '#ffebee';
+                ratioElement.style.backgroundColor = '#d32f2f44';
                 ratioElement.style.color = '#d32f2f';
                 ratioElement.style.fontWeight = 'bold';
             } else if (ratio > 0.1) {
-                ratioElement.style.backgroundColor = '#fff3e0';
+                ratioElement.style.backgroundColor = '#e6510044';
                 ratioElement.style.color = '#e65100';
             } else if (ratio > 0.05) {
-                ratioElement.style.backgroundColor = '#fff9e6';
+                ratioElement.style.backgroundColor = '#f57c0044';
                 ratioElement.style.color = '#f57c00';
             } else if (upvoteCount >= 500 && ratio < 0.1) {
                 // 高赞且低评论比 - 高质量回答标识
-                ratioElement.style.backgroundColor = '#e8f5e9';
+                ratioElement.style.backgroundColor = '#2e7d3244';
                 ratioElement.style.color = '#2e7d32';
                 ratioElement.style.fontWeight = 'bold';
             }
@@ -432,7 +432,7 @@
                 display: inline-block;
                 margin-right: 8px;
                 padding: 2px 8px;
-                background-color: #e8f4fd;
+                background-color: #1677ff44;
                 color: #1677ff;
                 border-radius: 3px;
                 font-size: 12px;
