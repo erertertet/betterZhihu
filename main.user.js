@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         better_zhihu
 // @namespace    https://github.com/erertertet/betterZhihu
-// @version      1.3.4
+// @version      1.3.5
 // @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局
 // @author       Erertertet
 // @match        https://www.zhihu.com/*
@@ -342,7 +342,12 @@
             ratioElement.textContent = ratio;
 
             // 根据比例设置颜色
-            if (ratio > 1) {
+            if (upvoteCount >= 500 && ratio < 0.1) {
+                // 高赞且低评论比 - 高质量回答标识
+                ratioElement.style.backgroundColor = '#2e7d3244';
+                ratioElement.style.color = '#2e7d32';
+                ratioElement.style.fontWeight = 'bold';
+            } else if (ratio > 1) {
                 ratioElement.style.backgroundColor = '#d32f2f44';
                 ratioElement.style.color = '#d32f2f';
                 ratioElement.style.fontWeight = 'bold';
@@ -352,11 +357,6 @@
             } else if (ratio > 0.05) {
                 ratioElement.style.backgroundColor = '#f57c0044';
                 ratioElement.style.color = '#f57c00';
-            } else if (upvoteCount >= 500 && ratio < 0.1) {
-                // 高赞且低评论比 - 高质量回答标识
-                ratioElement.style.backgroundColor = '#2e7d3244';
-                ratioElement.style.color = '#2e7d32';
-                ratioElement.style.fontWeight = 'bold';
             }
 
             // 插入到问题div内部（链接之前）
