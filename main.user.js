@@ -375,12 +375,12 @@
             ratioElement.style.cssText = `
                 display: inline-block;
                 margin-right: 8px;
-                padding: 2px 8px;
-                background-color: #f6f6f6;
+                padding: 1px 4px;
+                background-color: #64646444;
                 border-radius: 3px;
                 font-size: 12px;
                 font-weight: 500;
-                color: #646464;
+                color: #888888;
                 white-space: nowrap;
                 vertical-align: middle;
             `;
@@ -431,7 +431,7 @@
             articleTag.style.cssText = `
                 display: inline-block;
                 margin-right: 8px;
-                padding: 2px 8px;
+                padding: 1px 4px;
                 background-color: #1677ff44;
                 color: #1677ff;
                 border-radius: 3px;
@@ -469,7 +469,7 @@
                     padding: 8px 0;
                     font-size: 13px;
                     color: #8590a6;
-                    border-bottom: 1px solid #f0f0f0;
+                    border-bottom: 1px solid #f0f0f044;
                     margin-bottom: 12px;
                 `;
 
@@ -478,10 +478,10 @@
 
                 let timeHTML = '';
                 if (createdTime) {
-                    timeHTML += `📅 发布于 ${createdTime}`;
+                    timeHTML += `发布于 ${createdTime}`;
                 }
                 if (modifiedTime && modifiedTime !== createdTime) {
-                    timeHTML += ` | ✏️ 编辑于 ${modifiedTime}`;
+                    timeHTML += `<br/> 编辑于 ${modifiedTime}`;
                 }
 
                 timeInfoDiv.innerHTML = timeHTML;
