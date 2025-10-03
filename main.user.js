@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         better_zhihu
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局
 // @author       Erertertet
 // @match        https://www.zhihu.com/*
@@ -10,6 +10,40 @@
 
 (function() {
     'use strict';
+
+    const DEFAULT_THEME = 'light';
+
+    function isDeviceThemeDark() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    // 知乎实际上有一套隐藏的深色主题 style
+    // - 向网址后添加 `?theme=dark` 可以切换到深色模式
+    // - 与此同时，<html> 的 "data-theme" 属性也会随之变化
+    function getCurrentPageTheme() {
+        const dataTheme = document.documentElement.getAttribute('data-theme');
+        if (dataTheme === 'dark' || dataTheme === 'light') {
+            return dataTheme;
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTheme = urlParams.get('theme');
+        if (urlTheme === 'dark' || urlTheme === 'light') {
+            return urlTheme;
+        }
+        return DEFAULT_THEME;
+    }
+
+    const expectedTheme = isDeviceThemeDark() ? 'dark' : 'light';
+    const actualTheme = getCurrentPageTheme();
+    // console.log(`Device wants: ${expectedTheme}, Page has: ${actualTheme}`);
+
+    // 根据浏览器主题自动切换深浅模式
+    if (actualTheme !== expectedTheme) {
+        // console.log(`Theme mismatch detected. Attempting to switch to ${expectedTheme}...`);
+        const url = new URL(window.location.href);
+        url.searchParams.set('theme', expectedTheme);
+        window.location.href = url.toString();
+    }
 
     // 格式化时间
     function formatTime(isoString) {
@@ -341,12 +375,12 @@
             ratioElement.style.cssText = `
                 display: inline-block;
                 margin-right: 8px;
-                padding: 2px 8px;
-                background-color: #f6f6f6;
+                padding: 1px 4px;
+                background-color: #64646444;
                 border-radius: 3px;
                 font-size: 12px;
                 font-weight: 500;
-                color: #646464;
+                color: #888888;
                 white-space: nowrap;
                 vertical-align: middle;
             `;
@@ -354,18 +388,18 @@
 
             // 根据比例设置颜色
             if (ratio > 1) {
-                ratioElement.style.backgroundColor = '#ffebee';
+                ratioElement.style.backgroundColor = '#d32f2f44';
                 ratioElement.style.color = '#d32f2f';
                 ratioElement.style.fontWeight = 'bold';
             } else if (ratio > 0.1) {
-                ratioElement.style.backgroundColor = '#fff3e0';
+                ratioElement.style.backgroundColor = '#e6510044';
                 ratioElement.style.color = '#e65100';
             } else if (ratio > 0.05) {
-                ratioElement.style.backgroundColor = '#fff9e6';
+                ratioElement.style.backgroundColor = '#f57c0044';
                 ratioElement.style.color = '#f57c00';
             } else if (upvoteCount >= 500 && ratio < 0.1) {
                 // 高赞且低评论比 - 高质量回答标识
-                ratioElement.style.backgroundColor = '#e8f5e9';
+                ratioElement.style.backgroundColor = '#2e7d3244';
                 ratioElement.style.color = '#2e7d32';
                 ratioElement.style.fontWeight = 'bold';
             }
@@ -397,8 +431,8 @@
             articleTag.style.cssText = `
                 display: inline-block;
                 margin-right: 8px;
-                padding: 2px 8px;
-                background-color: #e8f4fd;
+                padding: 1px 4px;
+                background-color: #1677ff44;
                 color: #1677ff;
                 border-radius: 3px;
                 font-size: 12px;
@@ -435,7 +469,7 @@
                     padding: 8px 0;
                     font-size: 13px;
                     color: #8590a6;
-                    border-bottom: 1px solid #f0f0f0;
+                    border-bottom: 1px solid #f0f0f044;
                     margin-bottom: 12px;
                 `;
 
@@ -444,10 +478,10 @@
 
                 let timeHTML = '';
                 if (createdTime) {
-                    timeHTML += `📅 发布于 ${createdTime}`;
+                    timeHTML += `发布于 ${createdTime}`;
                 }
                 if (modifiedTime && modifiedTime !== createdTime) {
-                    timeHTML += ` | ✏️ 编辑于 ${modifiedTime}`;
+                    timeHTML += `<br/> 编辑于 ${modifiedTime}`;
                 }
 
                 timeInfoDiv.innerHTML = timeHTML;
