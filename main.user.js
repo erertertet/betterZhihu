@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         better_zhihu
 // @namespace    https://github.com/erertertet/betterZhihu
-// @version      1.3.5
+// @version      1.3.6
 // @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局
 // @author       Erertertet
 // @match        https://www.zhihu.com/*
@@ -323,8 +323,13 @@
         }
 
         // 1. 添加评论/点赞比标签到标题内部（链接前）
-        if (upvoteCount > 0 && !contentItem.querySelector('.custom-ratio-tag')) {
-            const ratio = (commentCount / upvoteCount).toFixed(2);
+        if (!contentItem.querySelector('.custom-ratio-tag')) {
+            let ratio = 0;
+            if (upvoteCount > 0){
+                ratio = (commentCount / upvoteCount).toFixed(2);
+            } else {
+                ratio = 0.00.toFixed(2);
+            }
             const ratioElement = document.createElement('span');
             ratioElement.className = 'custom-ratio-tag';
             ratioElement.style.cssText = `
