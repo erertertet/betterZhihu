@@ -418,7 +418,7 @@
             const title = contentItem.querySelector('.ContentItem-title');
             const meta = contentItem.querySelector('.ContentItem-meta');
 
-                        if (title && (dateCreated || dateModified)) {
+            if (title && (dateCreated || dateModified)) {
                 // 检查是否已经添加过时间信息
                 const existingTimeInfo = contentItem.querySelector('.custom-time-info');
                 if (existingTimeInfo) return;
