@@ -412,13 +412,13 @@
         // 3. 添加时间信息到标题下方（仅在展开状态）
         const richContent = contentItem.querySelector('.RichContent');
         const isCollapsed = richContent?.classList.contains('is-collapsed');
-        
+
         // 只在展开状态下显示时间信息
         if (!isCollapsed) {
             const title = contentItem.querySelector('.ContentItem-title');
             const meta = contentItem.querySelector('.ContentItem-meta');
-            
-            if (title && (dateCreated || dateModified)) {
+
+                        if (title && (dateCreated || dateModified)) {
                 // 检查是否已经添加过时间信息
                 const existingTimeInfo = contentItem.querySelector('.custom-time-info');
                 if (existingTimeInfo) return;
@@ -452,10 +452,11 @@
                 } else {
                     title.insertAdjacentElement('afterend', timeInfoDiv);
                 }
+
+                // 隐藏原始的时间显示元素
+                hideOriginalTime(contentItem);
             }
 
-            // 隐藏原始的时间显示元素
-            hideOriginalTime(contentItem);
         } else {
             // 如果是折叠状态，移除可能存在的时间信息
             const existingTimeInfo = contentItem.querySelector('.custom-time-info');
