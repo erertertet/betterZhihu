@@ -180,6 +180,7 @@
     }
 
     // 显示复制提示
+    // 修改颜色代码 rgba(0, 0, 0, 0.8) -> oklch(0%, 0%, 0%)
     function showCopyNotification(message) {
         const notification = document.createElement('div');
         notification.textContent = message;
