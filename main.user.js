@@ -323,6 +323,15 @@
             upvoteCount = jsonData?.upvote_num || 0;
         }
 
+        // 3. 修改分享按钮（每次都检查，因为展开/收起会重新渲染）
+        modifyShareButton(contentItem);
+
+        // 4. 隐藏收藏和喜欢按钮（每次都检查）
+        hideCollectAndLikeButtons(contentItem);
+
+        // 5. 在更多菜单中添加收藏和喜欢选项
+        addButtonsToMenu(contentItem);
+
         // 2. 如果是文章，在标题内部添加"文章"标签（链接前）
         if (isArticle && !contentItem.querySelector('.custom-article-tag')) {
             const articleTag = document.createElement('span');
@@ -544,15 +553,6 @@
                 }
             }
         }
-
-        // 3. 修改分享按钮（每次都检查，因为展开/收起会重新渲染）
-        modifyShareButton(contentItem);
-
-        // 4. 隐藏收藏和喜欢按钮（每次都检查）
-        hideCollectAndLikeButtons(contentItem);
-
-        // 5. 在更多菜单中添加收藏和喜欢选项
-        addButtonsToMenu(contentItem);
     }
 
     // 隐藏原始的时间显示
