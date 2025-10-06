@@ -323,6 +323,139 @@
             upvoteCount = jsonData?.upvote_num || 0;
         }
 
+        // 2. 如果是文章，在标题内部添加"文章"标签（链接前）
+        if (isArticle && !contentItem.querySelector('.custom-article-tag')) {
+            const articleTag = document.createElement('span');
+            articleTag.className = 'custom-article-tag';
+            articleTag.textContent = '文章';
+
+            // #1677ff44 (RGBA: 22, 119, 255, 0.27) -> oklch(60% 0.22 260 / 0.27)
+            // #1677ff (RGB: 22, 119, 255) -> oklch(60% 0.22 260)
+            articleTag.style.cssText = `
+                display: inline-block;
+                margin-right: 8px;
+                padding: 1px 4px;
+                background-color: oklch(60% 0.22 260 / 0.27);
+                color: oklch(60% 0.22 260);
+                border-radius: 3px;
+                font-size: 12px;
+                font-weight: 500;
+                vertical-align: middle;
+            `;
+
+            const titleSpan = contentItem.querySelector('.ContentItem-title span');
+            if (titleSpan) {
+                const link = titleSpan.querySelector('a');
+                if (link) {
+                    titleSpan.insertBefore(articleTag, link);
+                }
+            }
+        }
+
+        // 3. 添加时间信息到标题下方（仅在展开状态）
+        const richContent = contentItem.querySelector('.RichContent');
+        const isCollapsed = richContent?.classList.contains('is-collapsed');
+
+        // 只在展开状态下显示时间信息
+        if (!isCollapsed) {
+            const title = contentItem.querySelector('.ContentItem-title');
+            const meta = contentItem.querySelector('.ContentItem-meta');
+
+            if (title && (dateCreated || dateModified)) {
+                // 检查是否已经添加过时间信息
+                const existingTimeInfo = contentItem.querySelector('.custom-time-info');
+                if (existingTimeInfo) return;
+
+                const timeInfoDiv = document.createElement('div');
+                timeInfoDiv.className = 'custom-time-info';
+
+                // #8590a6 (RGB: 133, 144, 166) -> oklch(65% 0.04 260)
+                // #f0f0f044 (RGBA: 240, 240, 240, 0.27) -> oklch(96% 0 none / 0.27)
+                timeInfoDiv.style.cssText = `
+                    padding: 8px 0;
+                    font-size: 13px;
+                    color: oklch(65% 0.04 260);
+                    border-bottom: 1px solid oklch(96% 0 none / 0.27);
+                    margin-bottom: 12px;
+                `;
+
+                const createdTime = formatTime(dateCreated);
+                const modifiedTime = formatTime(dateModified);
+
+                let timeHTML = "";
+                if (createdTime) {
+                    timeHTML += `发布于 ${createdTime}`;
+                }
+                if (modifiedTime && modifiedTime !== createdTime) {
+                    timeHTML += `<br/> 编辑于 ${modifiedTime}`;
+                }
+
+                timeInfoDiv.innerHTML = timeHTML;
+
+                // 插入到标题和meta之间，如果没有meta就插入到标题后面
+                if (meta) {
+                    title.parentNode.insertBefore(timeInfoDiv, meta);
+                } else {
+                    title.insertAdjacentElement('afterend', timeInfoDiv);
+                }
+
+                // 隐藏原始的时间显示元素
+                hideOriginalTime(contentItem);
+            } else if (
+                isAnswer &&
+                window.location.href.includes('/question/')
+            ) {
+                // 在问题详情页才执行的逻辑（没有成功插入时间信息时）
+                // TODO: 在这里添加需要的处理代码
+
+                const author_Info = contentItem.querySelector('.AuthorInfo');
+
+                // 检查是否已经添加过时间信息
+                const existingTimeInfo = contentItem.querySelector('.custom-time-info');
+                if (existingTimeInfo) return;
+
+                const timeInfoDiv = document.createElement('div');
+                timeInfoDiv.className = 'custom-time-info';
+
+                // #8590a6 (RGB: 133, 144, 166) -> oklch(65% 0.04 260)
+                // #f0f0f044 (RGBA: 240, 240, 240, 0.27) -> oklch(96% 0 none / 0.27)
+                timeInfoDiv.style.cssText = `
+                padding: 8px 0;
+                font-size: 13px;
+                color: oklch(65% 0.04 260);
+                border-bottom: 1px solid oklch(96% 0 none / 0.27);
+                margin-bottom: 12px;
+            `;
+
+                const createdTime = formatTime(dateCreated);
+                const modifiedTime = formatTime(dateModified);
+
+                let timeHTML = '';
+                if (createdTime) {
+                    timeHTML += `发布于 ${createdTime}`;
+                }
+                if (modifiedTime && modifiedTime !== createdTime) {
+                    timeHTML += ` | 编辑于 ${modifiedTime}`;
+                }
+
+                timeInfoDiv.innerHTML = timeHTML;
+
+                author_Info.insertAdjacentElement('afterend', timeInfoDiv);
+
+                // 隐藏原始的时间显示元素
+                hideOriginalTime(contentItem);
+
+            }
+
+        } else {
+            // 如果是折叠状态，移除可能存在的时间信息
+            const existingTimeInfo = contentItem.querySelector('.custom-time-info');
+            if (existingTimeInfo) {
+                existingTimeInfo.remove();
+            }
+        }
+
+        
         // 1. 添加评论/点赞比标签到标题内部（链接前）
         if (!contentItem.querySelector('.custom-ratio-tag')) {
             let ratio = 0;
@@ -386,6 +519,7 @@
 
             // 插入到问题div内部（链接之前）
             const questionDiv = contentItem.querySelector('[itemprop="zhihu:question"]');
+
             if (questionDiv) {
                 const link = questionDiv.querySelector('a');
                 if (link) {
@@ -400,94 +534,14 @@
                         titleSpan.insertBefore(ratioElement, link);
                     }
                 }
-            }
-        }
-
-        // 2. 如果是文章，在标题内部添加"文章"标签（链接前）
-        if (isArticle && !contentItem.querySelector('.custom-article-tag')) {
-            const articleTag = document.createElement('span');
-            articleTag.className = 'custom-article-tag';
-            articleTag.textContent = '文章';
-
-            // #1677ff44 (RGBA: 22, 119, 255, 0.27) -> oklch(60% 0.22 260 / 0.27)
-            // #1677ff (RGB: 22, 119, 255) -> oklch(60% 0.22 260)
-            articleTag.style.cssText = `
-                display: inline-block;
-                margin-right: 8px;
-                padding: 1px 4px;
-                background-color: oklch(60% 0.22 260 / 0.27);
-                color: oklch(60% 0.22 260);
-                border-radius: 3px;
-                font-size: 12px;
-                font-weight: 500;
-                vertical-align: middle;
-            `;
-
-            const titleSpan = contentItem.querySelector('.ContentItem-title span');
-            if (titleSpan) {
-                const link = titleSpan.querySelector('a');
-                if (link) {
-                    titleSpan.insertBefore(articleTag, link);
+            } else if (
+                isAnswer &&
+                window.location.href.includes('/question/')
+            ) {
+                const content_meta = contentItem.querySelector('.custom-time-info');
+                if (content_meta) {
+                    content_meta.insertBefore(ratioElement, content_meta.firstChild);
                 }
-            }
-        }
-
-        // 3. 添加时间信息到标题下方（仅在展开状态）
-        const richContent = contentItem.querySelector('.RichContent');
-        const isCollapsed = richContent?.classList.contains('is-collapsed');
-
-        // 只在展开状态下显示时间信息
-        if (!isCollapsed) {
-            const title = contentItem.querySelector('.ContentItem-title');
-            const meta = contentItem.querySelector('.ContentItem-meta');
-
-            if (title && (dateCreated || dateModified)) {
-                // 检查是否已经添加过时间信息
-                const existingTimeInfo = contentItem.querySelector('.custom-time-info');
-                if (existingTimeInfo) return;
-
-                const timeInfoDiv = document.createElement('div');
-                timeInfoDiv.className = 'custom-time-info';
-
-                // #8590a6 (RGB: 133, 144, 166) -> oklch(65% 0.04 260)
-                // #f0f0f044 (RGBA: 240, 240, 240, 0.27) -> oklch(96% 0 none / 0.27)
-                timeInfoDiv.style.cssText = `
-                    padding: 8px 0;
-                    font-size: 13px;
-                    color: oklch(65% 0.04 260);
-                    border-bottom: 1px solid oklch(96% 0 none / 0.27);
-                    margin-bottom: 12px;
-                `;
-
-                const createdTime = formatTime(dateCreated);
-                const modifiedTime = formatTime(dateModified);
-
-                let timeHTML = '';
-                if (createdTime) {
-                    timeHTML += `发布于 ${createdTime}`;
-                }
-                if (modifiedTime && modifiedTime !== createdTime) {
-                    timeHTML += `<br/> 编辑于 ${modifiedTime}`;
-                }
-
-                timeInfoDiv.innerHTML = timeHTML;
-
-                // 插入到标题和meta之间，如果没有meta就插入到标题后面
-                if (meta) {
-                    title.parentNode.insertBefore(timeInfoDiv, meta);
-                } else {
-                    title.insertAdjacentElement('afterend', timeInfoDiv);
-                }
-
-                // 隐藏原始的时间显示元素
-                hideOriginalTime(contentItem);
-            }
-
-        } else {
-            // 如果是折叠状态，移除可能存在的时间信息
-            const existingTimeInfo = contentItem.querySelector('.custom-time-info');
-            if (existingTimeInfo) {
-                existingTimeInfo.remove();
             }
         }
 
