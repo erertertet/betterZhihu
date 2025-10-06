@@ -143,7 +143,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: oklch(0%, 0%, 0%);
+            background-color: oklch(0% 0 none / 0.8);
             color: white;
             padding: 12px 24px;
             border-radius: 4px;
