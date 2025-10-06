@@ -384,24 +384,6 @@
             `;
             ratioElement.textContent = ratio;
 
-            // 根据比例设置颜色
-            if (upvoteCount >= 500 && ratio < 0.1) {
-                // 高赞且低评论比 - 高质量回答标识
-                ratioElement.style.backgroundColor = '#2e7d3244';
-                ratioElement.style.color = '#2e7d32';
-                ratioElement.style.fontWeight = 'bold';
-            } else if (ratio > 1) {
-                ratioElement.style.backgroundColor = '#d32f2f44';
-                ratioElement.style.color = '#d32f2f';
-                ratioElement.style.fontWeight = 'bold';
-            } else if (ratio > 0.1) {
-                ratioElement.style.backgroundColor = '#e6510044';
-                ratioElement.style.color = '#e65100';
-            } else if (ratio > 0.05) {
-                ratioElement.style.backgroundColor = '#f57c0044';
-                ratioElement.style.color = '#f57c00';
-            }
-
             // 插入到问题div内部（链接之前）
             const questionDiv = contentItem.querySelector('[itemprop="zhihu:question"]');
             if (questionDiv) {
