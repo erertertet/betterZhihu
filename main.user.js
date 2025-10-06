@@ -10,7 +10,7 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     const DEFAULT_THEME = 'light';
@@ -86,7 +86,7 @@
         let title = jsonDataCombined.title;
         let author = jsonDataCombined.authorName;
         let ids = jsonDataCombined.card.content;
-        
+
         if (isAnswer) {
 
 
@@ -204,16 +204,16 @@
     function hideCollectAndLikeButtons(contentItem) {
         // 查找所有按钮
         const buttons = contentItem.querySelectorAll('.ContentItem-action');
-        
+
         buttons.forEach(button => {
             const buttonText = button.textContent || button.getAttribute('aria-label') || '';
-            
+
             // 隐藏收藏按钮
             if (buttonText.includes('收藏') || button.querySelector('.Zi--Star')) {
                 button.style.display = 'none';
                 button.dataset.originalButton = 'collect';
             }
-            
+
             // 隐藏喜欢按钮
             if (buttonText.includes('喜欢') || button.querySelector('.Zi--Heart')) {
                 button.style.display = 'none';
@@ -234,11 +234,11 @@
         const observer = new MutationObserver(() => {
             const popoverId = moreButton.getAttribute('aria-controls') || moreButton.id.replace('-toggle', '-content');
             const menu = document.getElementById(popoverId);
-            
+
             if (menu && menu.classList.contains('Popover-content-enter-done')) {
                 const menuContainer = menu.querySelector('.Menu');
                 if (!menuContainer || menuContainer.dataset.itemsAdded) return;
-                
+
                 menuContainer.dataset.itemsAdded = 'true';
 
                 // 获取原始按钮
@@ -317,7 +317,7 @@
             commentCount = parseInt(contentItem.querySelector('meta[itemprop="commentCount"]')?.content || 0);
             dateCreated = contentItem.querySelector('meta[itemprop="datePublished"]')?.content;
             dateModified = contentItem.querySelector('meta[itemprop="dateModified"]')?.content;
-            
+
             // 从 JSON 中获取点赞数（文章没有 upvoteCount 的 meta 标签）
             const jsonData = extractDataFromJson(contentItem);
             upvoteCount = jsonData?.upvote_num || 0;
@@ -326,14 +326,14 @@
         // 1. 添加评论/点赞比标签到标题内部（链接前）
         if (!contentItem.querySelector('.custom-ratio-tag')) {
             let ratio = 0;
-            if (upvoteCount > 0){
+            if (upvoteCount > 0) {
                 ratio = (commentCount / upvoteCount).toFixed(2);
             } else {
                 ratio = 0.00.toFixed(2);
             }
             const ratioElement = document.createElement('span');
             ratioElement.className = 'custom-ratio-tag';
-            
+
             // 默认颜色：#64646444 和 #888888 转换为 Oklch
             // #64646444 (RGBA: 100, 100, 100, 0.27) -> oklch(50% 0 none / 0.27)
             // #888888 (RGB: 136, 136, 136) -> oklch(63% 0 none)
@@ -369,7 +369,7 @@
                 backgroundColor = 'oklch(71% 0.18 54 / 0.27)';
                 color = 'oklch(71% 0.18 54)';
             }
-            
+
             ratioElement.style.cssText = `
                 display: inline-block;
                 margin-right: 8px;
@@ -408,7 +408,7 @@
             const articleTag = document.createElement('span');
             articleTag.className = 'custom-article-tag';
             articleTag.textContent = '文章';
-            
+
             // #1677ff44 (RGBA: 22, 119, 255, 0.27) -> oklch(60% 0.22 260 / 0.27)
             // #1677ff (RGB: 22, 119, 255) -> oklch(60% 0.22 260)
             articleTag.style.cssText = `
@@ -422,7 +422,7 @@
                 font-weight: 500;
                 vertical-align: middle;
             `;
-            
+
             const titleSpan = contentItem.querySelector('.ContentItem-title span');
             if (titleSpan) {
                 const link = titleSpan.querySelector('a');
@@ -448,7 +448,7 @@
 
                 const timeInfoDiv = document.createElement('div');
                 timeInfoDiv.className = 'custom-time-info';
-                
+
                 // #8590a6 (RGB: 133, 144, 166) -> oklch(65% 0.04 260)
                 // #f0f0f044 (RGBA: 240, 240, 240, 0.27) -> oklch(96% 0 none / 0.27)
                 timeInfoDiv.style.cssText = `
@@ -517,7 +517,7 @@
             // 处理回答
             const answers = document.querySelectorAll('.ContentItem.AnswerItem');
             answers.forEach(processContentItem);
-            
+
             // 处理文章
             const articles = document.querySelectorAll('.ContentItem.ArticleItem');
             articles.forEach(processContentItem);
@@ -533,7 +533,7 @@
         // 初始处理已存在的内容
         const answers = document.querySelectorAll('.ContentItem.AnswerItem');
         answers.forEach(processContentItem);
-        
+
         const articles = document.querySelectorAll('.ContentItem.ArticleItem');
         articles.forEach(processContentItem);
 
