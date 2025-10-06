@@ -134,6 +134,7 @@
     }
 
     // 显示复制提示
+    // 修改颜色代码 rgba(0, 0, 0, 0.8) -> oklch(0%, 0%, 0%)
     function showCopyNotification(message) {
         const notification = document.createElement('div');
         notification.textContent = message;
@@ -142,7 +143,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: oklch(0%, 0%, 0%);
             color: white;
             padding: 12px 24px;
             border-radius: 4px;
@@ -332,15 +333,52 @@
             }
             const ratioElement = document.createElement('span');
             ratioElement.className = 'custom-ratio-tag';
+            
+            // 默认颜色：#64646444 和 #888888 转换为 Oklch
+            // #64646444 (RGBA: 100, 100, 100, 0.27) -> oklch(50% 0 none / 0.27)
+            // #888888 (RGB: 136, 136, 136) -> oklch(63% 0 none)
+            let backgroundColor = 'oklch(50% 0 none / 0.27)';
+            let color = 'oklch(63% 0 none)';
+            let fontWeight = '500';
+
+            // 根据比例设置颜色
+            if (upvoteCount >= 500 && ratio < 0.1) {
+                // 高赞且低评论比 - 高质量回答标识
+                // #2e7d3244 (RGBA: 46, 125, 50, 0.27) -> oklch(52% 0.13 140 / 0.27)
+                // #2e7d32 (RGB: 46, 125, 50) -> oklch(52% 0.13 140)
+                backgroundColor = 'oklch(52% 0.13 140 / 0.27)';
+                color = 'oklch(52% 0.13 140)';
+                fontWeight = 'bold';
+            } else if (ratio > 1) {
+                // 高评论比
+                // #d32f2f44 (RGBA: 211, 47, 47, 0.27) -> oklch(57% 0.2 26 / 0.27)
+                // #d32f2f (RGB: 211, 47, 47) -> oklch(57% 0.2 26)
+                backgroundColor = 'oklch(57% 0.2 26 / 0.27)';
+                color = 'oklch(57% 0.2 26)';
+                fontWeight = 'bold';
+            } else if (ratio > 0.1) {
+                // 中高评论比
+                // #e6510044 (RGBA: 230, 81, 0, 0.27) -> oklch(63% 0.2 40 / 0.27)
+                // #e65100 (RGB: 230, 81, 0) -> oklch(63% 0.2 40)
+                backgroundColor = 'oklch(63% 0.2 40 / 0.27)';
+                color = 'oklch(63% 0.2 40)';
+            } else if (ratio > 0.05) {
+                // 中评论比
+                // #f57c0044 (RGBA: 245, 124, 0, 0.27) -> oklch(71% 0.18 54 / 0.27)
+                // #f57c00 (RGB: 245, 124, 0) -> oklch(71% 0.18 54)
+                backgroundColor = 'oklch(71% 0.18 54 / 0.27)';
+                color = 'oklch(71% 0.18 54)';
+            }
+            
             ratioElement.style.cssText = `
                 display: inline-block;
                 margin-right: 8px;
                 padding: 1px 4px;
-                background-color: #64646444;
+                background-color: ${backgroundColor};
                 border-radius: 3px;
                 font-size: 12px;
-                font-weight: 500;
-                color: #888888;
+                font-weight: ${fontWeight};
+                color: ${color};
                 white-space: nowrap;
                 vertical-align: middle;
             `;
@@ -388,12 +426,15 @@
             const articleTag = document.createElement('span');
             articleTag.className = 'custom-article-tag';
             articleTag.textContent = '文章';
+            
+            // #1677ff44 (RGBA: 22, 119, 255, 0.27) -> oklch(60% 0.22 260 / 0.27)
+            // #1677ff (RGB: 22, 119, 255) -> oklch(60% 0.22 260)
             articleTag.style.cssText = `
                 display: inline-block;
                 margin-right: 8px;
                 padding: 1px 4px;
-                background-color: #1677ff44;
-                color: #1677ff;
+                background-color: oklch(60% 0.22 260 / 0.27);
+                color: oklch(60% 0.22 260);
                 border-radius: 3px;
                 font-size: 12px;
                 font-weight: 500;
@@ -425,11 +466,14 @@
 
                 const timeInfoDiv = document.createElement('div');
                 timeInfoDiv.className = 'custom-time-info';
+                
+                // #8590a6 (RGB: 133, 144, 166) -> oklch(65% 0.04 260)
+                // #f0f0f044 (RGBA: 240, 240, 240, 0.27) -> oklch(96% 0 none / 0.27)
                 timeInfoDiv.style.cssText = `
                     padding: 8px 0;
                     font-size: 13px;
-                    color: #8590a6;
-                    border-bottom: 1px solid #f0f0f044;
+                    color: oklch(65% 0.04 260);
+                    border-bottom: 1px solid oklch(96% 0 none / 0.27);
                     margin-bottom: 12px;
                 `;
 
