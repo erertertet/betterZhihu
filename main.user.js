@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         better_zhihu
 // @namespace    https://github.com/erertertet/betterZhihu
-// @version      1.3.6
+// @version      1.4.0
 // @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局
 // @author       Erertertet
 // @match        https://www.zhihu.com/*
@@ -10,7 +10,7 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     const DEFAULT_THEME = 'light';
@@ -86,7 +86,7 @@
         let title = jsonDataCombined.title;
         let author = jsonDataCombined.authorName;
         let ids = jsonDataCombined.card.content;
-        
+
         if (isAnswer) {
 
 
@@ -134,6 +134,7 @@
     }
 
     // 显示复制提示
+    // 修改颜色代码 rgba(0, 0, 0, 0.8) -> oklch(0%, 0%, 0%)
     function showCopyNotification(message) {
         const notification = document.createElement('div');
         notification.textContent = message;
@@ -142,7 +143,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: oklch(0% 0 none / 0.8);
             color: white;
             padding: 12px 24px;
             border-radius: 4px;
@@ -203,16 +204,16 @@
     function hideCollectAndLikeButtons(contentItem) {
         // 查找所有按钮
         const buttons = contentItem.querySelectorAll('.ContentItem-action');
-        
+
         buttons.forEach(button => {
             const buttonText = button.textContent || button.getAttribute('aria-label') || '';
-            
+
             // 隐藏收藏按钮
             if (buttonText.includes('收藏') || button.querySelector('.Zi--Star')) {
                 button.style.display = 'none';
                 button.dataset.originalButton = 'collect';
             }
-            
+
             // 隐藏喜欢按钮
             if (buttonText.includes('喜欢') || button.querySelector('.Zi--Heart')) {
                 button.style.display = 'none';
@@ -233,11 +234,11 @@
         const observer = new MutationObserver(() => {
             const popoverId = moreButton.getAttribute('aria-controls') || moreButton.id.replace('-toggle', '-content');
             const menu = document.getElementById(popoverId);
-            
+
             if (menu && menu.classList.contains('Popover-content-enter-done')) {
                 const menuContainer = menu.querySelector('.Menu');
                 if (!menuContainer || menuContainer.dataset.itemsAdded) return;
-                
+
                 menuContainer.dataset.itemsAdded = 'true';
 
                 // 获取原始按钮
@@ -316,90 +317,41 @@
             commentCount = parseInt(contentItem.querySelector('meta[itemprop="commentCount"]')?.content || 0);
             dateCreated = contentItem.querySelector('meta[itemprop="datePublished"]')?.content;
             dateModified = contentItem.querySelector('meta[itemprop="dateModified"]')?.content;
-            
+
             // 从 JSON 中获取点赞数（文章没有 upvoteCount 的 meta 标签）
             const jsonData = extractDataFromJson(contentItem);
             upvoteCount = jsonData?.upvote_num || 0;
         }
 
-        // 1. 添加评论/点赞比标签到标题内部（链接前）
-        if (!contentItem.querySelector('.custom-ratio-tag')) {
-            let ratio = 0;
-            if (upvoteCount > 0){
-                ratio = (commentCount / upvoteCount).toFixed(2);
-            } else {
-                ratio = 0.00.toFixed(2);
-            }
-            const ratioElement = document.createElement('span');
-            ratioElement.className = 'custom-ratio-tag';
-            ratioElement.style.cssText = `
-                display: inline-block;
-                margin-right: 8px;
-                padding: 1px 4px;
-                background-color: #64646444;
-                border-radius: 3px;
-                font-size: 12px;
-                font-weight: 500;
-                color: #888888;
-                white-space: nowrap;
-                vertical-align: middle;
-            `;
-            ratioElement.textContent = ratio;
+        // 3. 修改分享按钮（每次都检查，因为展开/收起会重新渲染）
+        modifyShareButton(contentItem);
 
-            // 根据比例设置颜色
-            if (upvoteCount >= 500 && ratio < 0.1) {
-                // 高赞且低评论比 - 高质量回答标识
-                ratioElement.style.backgroundColor = '#2e7d3244';
-                ratioElement.style.color = '#2e7d32';
-                ratioElement.style.fontWeight = 'bold';
-            } else if (ratio > 1) {
-                ratioElement.style.backgroundColor = '#d32f2f44';
-                ratioElement.style.color = '#d32f2f';
-                ratioElement.style.fontWeight = 'bold';
-            } else if (ratio > 0.1) {
-                ratioElement.style.backgroundColor = '#e6510044';
-                ratioElement.style.color = '#e65100';
-            } else if (ratio > 0.05) {
-                ratioElement.style.backgroundColor = '#f57c0044';
-                ratioElement.style.color = '#f57c00';
-            }
+        // 4. 隐藏收藏和喜欢按钮（每次都检查）
+        hideCollectAndLikeButtons(contentItem);
 
-            // 插入到问题div内部（链接之前）
-            const questionDiv = contentItem.querySelector('[itemprop="zhihu:question"]');
-            if (questionDiv) {
-                const link = questionDiv.querySelector('a');
-                if (link) {
-                    questionDiv.insertBefore(ratioElement, link);
-                }
-            } else if (isArticle) {
-                // 文章没有 zhihu:question，直接插入到标题span内部
-                const titleSpan = contentItem.querySelector('.ContentItem-title span');
-                if (titleSpan) {
-                    const link = titleSpan.querySelector('a');
-                    if (link) {
-                        titleSpan.insertBefore(ratioElement, link);
-                    }
-                }
-            }
-        }
+        // 5. 在更多菜单中添加收藏和喜欢选项
+        addButtonsToMenu(contentItem);
 
         // 2. 如果是文章，在标题内部添加"文章"标签（链接前）
         if (isArticle && !contentItem.querySelector('.custom-article-tag')) {
             const articleTag = document.createElement('span');
             articleTag.className = 'custom-article-tag';
             articleTag.textContent = '文章';
+
+            // #1677ff44 (RGBA: 22, 119, 255, 0.27) -> oklch(60% 0.22 260 / 0.27)
+            // #1677ff (RGB: 22, 119, 255) -> oklch(60% 0.22 260)
             articleTag.style.cssText = `
                 display: inline-block;
                 margin-right: 8px;
                 padding: 1px 4px;
-                background-color: #1677ff44;
-                color: #1677ff;
+                background-color: oklch(60% 0.22 260 / 0.27);
+                color: oklch(60% 0.22 260);
                 border-radius: 3px;
                 font-size: 12px;
                 font-weight: 500;
                 vertical-align: middle;
             `;
-            
+
             const titleSpan = contentItem.querySelector('.ContentItem-title span');
             if (titleSpan) {
                 const link = titleSpan.querySelector('a');
@@ -425,18 +377,21 @@
 
                 const timeInfoDiv = document.createElement('div');
                 timeInfoDiv.className = 'custom-time-info';
+
+                // #8590a6 (RGB: 133, 144, 166) -> oklch(65% 0.04 260)
+                // #f0f0f044 (RGBA: 240, 240, 240, 0.27) -> oklch(96% 0 none / 0.27)
                 timeInfoDiv.style.cssText = `
                     padding: 8px 0;
                     font-size: 13px;
-                    color: #8590a6;
-                    border-bottom: 1px solid #f0f0f044;
+                    color: oklch(65% 0.04 260);
+                    border-bottom: 1px solid oklch(96% 0 none / 0.27);
                     margin-bottom: 12px;
                 `;
 
                 const createdTime = formatTime(dateCreated);
                 const modifiedTime = formatTime(dateModified);
 
-                let timeHTML = '';
+                let timeHTML = "";
                 if (createdTime) {
                     timeHTML += `发布于 ${createdTime}`;
                 }
@@ -455,6 +410,50 @@
 
                 // 隐藏原始的时间显示元素
                 hideOriginalTime(contentItem);
+            } else if (
+                isAnswer &&
+                window.location.href.includes('/question/')
+            ) {
+                // 在问题详情页才执行的逻辑（没有成功插入时间信息时）
+                // TODO: 在这里添加需要的处理代码
+
+                const author_Info = contentItem.querySelector('.AuthorInfo');
+
+                // 检查是否已经添加过时间信息
+                const existingTimeInfo = contentItem.querySelector('.custom-time-info');
+                if (existingTimeInfo) return;
+
+                const timeInfoDiv = document.createElement('div');
+                timeInfoDiv.className = 'custom-time-info';
+
+                // #8590a6 (RGB: 133, 144, 166) -> oklch(65% 0.04 260)
+                // #f0f0f044 (RGBA: 240, 240, 240, 0.27) -> oklch(96% 0 none / 0.27)
+                timeInfoDiv.style.cssText = `
+                padding: 8px 0;
+                font-size: 13px;
+                color: oklch(65% 0.04 260);
+                border-bottom: 1px solid oklch(96% 0 none / 0.27);
+                margin-bottom: 12px;
+            `;
+
+                const createdTime = formatTime(dateCreated);
+                const modifiedTime = formatTime(dateModified);
+
+                let timeHTML = '';
+                if (createdTime) {
+                    timeHTML += `发布于 ${createdTime}`;
+                }
+                if (modifiedTime && modifiedTime !== createdTime) {
+                    timeHTML += ` | 编辑于 ${modifiedTime}`;
+                }
+
+                timeInfoDiv.innerHTML = timeHTML;
+
+                author_Info.insertAdjacentElement('afterend', timeInfoDiv);
+
+                // 隐藏原始的时间显示元素
+                hideOriginalTime(contentItem);
+
             }
 
         } else {
@@ -465,14 +464,95 @@
             }
         }
 
-        // 3. 修改分享按钮（每次都检查，因为展开/收起会重新渲染）
-        modifyShareButton(contentItem);
+        
+        // 1. 添加评论/点赞比标签到标题内部（链接前）
+        if (!contentItem.querySelector('.custom-ratio-tag')) {
+            let ratio = 0;
+            if (upvoteCount > 0) {
+                ratio = (commentCount / upvoteCount).toFixed(2);
+            } else {
+                ratio = 0.00.toFixed(2);
+            }
+            const ratioElement = document.createElement('span');
+            ratioElement.className = 'custom-ratio-tag';
 
-        // 4. 隐藏收藏和喜欢按钮（每次都检查）
-        hideCollectAndLikeButtons(contentItem);
+            // 默认颜色：#64646444 和 #888888 转换为 Oklch
+            // #64646444 (RGBA: 100, 100, 100, 0.27) -> oklch(50% 0 none / 0.27)
+            // #888888 (RGB: 136, 136, 136) -> oklch(63% 0 none)
+            let backgroundColor = 'oklch(50% 0 none / 0.27)';
+            let color = 'oklch(63% 0 none)';
+            let fontWeight = '500';
 
-        // 5. 在更多菜单中添加收藏和喜欢选项
-        addButtonsToMenu(contentItem);
+            // 根据比例设置颜色
+            if (upvoteCount >= 500 && ratio < 0.1) {
+                // 高赞且低评论比 - 高质量回答标识
+                // #2e7d3244 (RGBA: 46, 125, 50, 0.27) -> oklch(52% 0.13 140 / 0.27)
+                // #2e7d32 (RGB: 46, 125, 50) -> oklch(52% 0.13 140)
+                backgroundColor = 'oklch(52% 0.13 140 / 0.27)';
+                color = 'oklch(52% 0.13 140)';
+                fontWeight = 'bold';
+            } else if (ratio > 1) {
+                // 高评论比
+                // #d32f2f44 (RGBA: 211, 47, 47, 0.27) -> oklch(57% 0.2 26 / 0.27)
+                // #d32f2f (RGB: 211, 47, 47) -> oklch(57% 0.2 26)
+                backgroundColor = 'oklch(57% 0.2 26 / 0.27)';
+                color = 'oklch(57% 0.2 26)';
+                fontWeight = 'bold';
+            } else if (ratio > 0.1) {
+                // 中高评论比
+                // #e6510044 (RGBA: 230, 81, 0, 0.27) -> oklch(63% 0.2 40 / 0.27)
+                // #e65100 (RGB: 230, 81, 0) -> oklch(63% 0.2 40)
+                backgroundColor = 'oklch(63% 0.2 40 / 0.27)';
+                color = 'oklch(63% 0.2 40)';
+            } else if (ratio > 0.05) {
+                // 中评论比
+                // #f57c0044 (RGBA: 245, 124, 0, 0.27) -> oklch(71% 0.18 54 / 0.27)
+                // #f57c00 (RGB: 245, 124, 0) -> oklch(71% 0.18 54)
+                backgroundColor = 'oklch(71% 0.18 54 / 0.27)';
+                color = 'oklch(71% 0.18 54)';
+            }
+
+            ratioElement.style.cssText = `
+                display: inline-block;
+                margin-right: 8px;
+                padding: 1px 4px;
+                background-color: ${backgroundColor};
+                border-radius: 3px;
+                font-size: 12px;
+                font-weight: ${fontWeight};
+                color: ${color};
+                white-space: nowrap;
+                vertical-align: middle;
+            `;
+            ratioElement.textContent = ratio;
+
+            // 插入到问题div内部（链接之前）
+            const questionDiv = contentItem.querySelector('[itemprop="zhihu:question"]');
+
+            if (questionDiv) {
+                const link = questionDiv.querySelector('a');
+                if (link) {
+                    questionDiv.insertBefore(ratioElement, link);
+                }
+            } else if (isArticle) {
+                // 文章没有 zhihu:question，直接插入到标题span内部
+                const titleSpan = contentItem.querySelector('.ContentItem-title span');
+                if (titleSpan) {
+                    const link = titleSpan.querySelector('a');
+                    if (link) {
+                        titleSpan.insertBefore(ratioElement, link);
+                    }
+                }
+            } else if (
+                isAnswer &&
+                window.location.href.includes('/question/')
+            ) {
+                const content_meta = contentItem.querySelector('.custom-time-info');
+                if (content_meta) {
+                    content_meta.insertBefore(ratioElement, content_meta.firstChild);
+                }
+            }
+        }
     }
 
     // 隐藏原始的时间显示
@@ -491,7 +571,7 @@
             // 处理回答
             const answers = document.querySelectorAll('.ContentItem.AnswerItem');
             answers.forEach(processContentItem);
-            
+
             // 处理文章
             const articles = document.querySelectorAll('.ContentItem.ArticleItem');
             articles.forEach(processContentItem);
@@ -507,7 +587,7 @@
         // 初始处理已存在的内容
         const answers = document.querySelectorAll('.ContentItem.AnswerItem');
         answers.forEach(processContentItem);
-        
+
         const articles = document.querySelectorAll('.ContentItem.ArticleItem');
         articles.forEach(processContentItem);
 
