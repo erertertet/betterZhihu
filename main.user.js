@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         better_zhihu
 // @namespace    https://github.com/erertertet/betterZhihu
-// @version      1.4.0
-// @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局
+// @version      1.5.0
+// @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局，启用文本复制
 // @author       Erertertet
 // @match        https://www.zhihu.com/*
 // @downloadURL  https://github.com/erertertet/betterZhihu/blob/main/main.user.js?raw=true
@@ -46,6 +46,12 @@
         url.searchParams.set('theme', expectedTheme);
         window.location.href = url.toString();
     }
+
+    // ==================== 启用文本复制功能 ====================
+    // 拦截复制事件，阻止知乎的限制
+    document.addEventListener('copy', function(e) {
+        e.stopPropagation(); // 阻止知乎的事件处理器
+    }, true); // capture phase - 优先级最高
 
     // 格式化时间
     function formatTime(isoString) {
