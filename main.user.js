@@ -504,13 +504,13 @@
                 backgroundColor = 'oklch(57% 0.2 26 / 0.27)';
                 color = 'oklch(57% 0.2 26)';
                 fontWeight = 'bold';
-            } else if (ratio > 0.1) {
+            } else if (ratio > 0.5) {
                 // 中高评论比
                 // #e6510044 (RGBA: 230, 81, 0, 0.27) -> oklch(63% 0.2 40 / 0.27)
                 // #e65100 (RGB: 230, 81, 0) -> oklch(63% 0.2 40)
                 backgroundColor = 'oklch(63% 0.2 40 / 0.27)';
                 color = 'oklch(63% 0.2 40)';
-            } else if (ratio > 0.05) {
+            } else if (ratio > 0.25) {
                 // 中评论比
                 // #f57c0044 (RGBA: 245, 124, 0, 0.27) -> oklch(71% 0.18 54 / 0.27)
                 // #f57c00 (RGB: 245, 124, 0) -> oklch(71% 0.18 54)
