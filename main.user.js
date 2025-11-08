@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         better_zhihu
 // @namespace    https://github.com/erertertet/betterZhihu
-// @version      1.4.0
-// @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局
+// @version      1.5.0
+// @description  在知乎回答和文章中标记评论/点赞比，将编辑时间和发布时间显示在标题下方，隐藏原始时间，优化分享和按钮布局，启用文本复制
 // @author       Erertertet
 // @match        https://www.zhihu.com/*
 // @downloadURL  https://github.com/erertertet/betterZhihu/blob/main/main.user.js?raw=true
@@ -46,6 +46,12 @@
         url.searchParams.set('theme', expectedTheme);
         window.location.href = url.toString();
     }
+
+    // ==================== 启用文本复制功能 ====================
+    // 拦截复制事件，阻止知乎的限制
+    document.addEventListener('copy', function(e) {
+        e.stopPropagation(); // 阻止知乎的事件处理器
+    }, true); // capture phase - 优先级最高
 
     // 格式化时间
     function formatTime(isoString) {
@@ -498,13 +504,13 @@
                 backgroundColor = 'oklch(57% 0.2 26 / 0.27)';
                 color = 'oklch(57% 0.2 26)';
                 fontWeight = 'bold';
-            } else if (ratio > 0.1) {
+            } else if (ratio > 0.5) {
                 // 中高评论比
                 // #e6510044 (RGBA: 230, 81, 0, 0.27) -> oklch(63% 0.2 40 / 0.27)
                 // #e65100 (RGB: 230, 81, 0) -> oklch(63% 0.2 40)
                 backgroundColor = 'oklch(63% 0.2 40 / 0.27)';
                 color = 'oklch(63% 0.2 40)';
-            } else if (ratio > 0.05) {
+            } else if (ratio > 0.25) {
                 // 中评论比
                 // #f57c0044 (RGBA: 245, 124, 0, 0.27) -> oklch(71% 0.18 54 / 0.27)
                 // #f57c00 (RGB: 245, 124, 0) -> oklch(71% 0.18 54)
